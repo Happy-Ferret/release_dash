@@ -12,7 +12,6 @@
         // Retrieve the specified URL
         bzURL = $('input#bz-url').val();
         
-        console.log(bzURL);
 
         var start = '@birthday';
         if ( $('input#query-start').val() ) {
@@ -40,6 +39,7 @@
             cluster = 'public_bugs';
         }
 
+        console.log(bzURL);
         // Start building the Qb query with all our parameters
         var qbQuery = bzSearchToQb( bzURL, start, end, cluster );
 

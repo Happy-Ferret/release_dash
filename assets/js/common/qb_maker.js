@@ -10,8 +10,10 @@
     *****************/
         function bzSearchToQb( bzURL, start, end, cluster ){
 
+            
             var bzURL = bzURL.split('?')[1];
             var params = URI.parseQuery( bzURL );
+            console.log( params );
 
             var qbQuery = {};
 
@@ -27,6 +29,7 @@
             // Prevents false security errors from appearing in console
 
             // $extract = $('form#queryform', html);
+
             qbQuery.esfilter = parseBzSearch( params );
 
             qbQuery.edges = [{
@@ -49,6 +52,8 @@
         Applies jQuery to extract Bugzilla search params from HTML
     ******************/
         function parseBzSearch( params ){
+            console.log( params );
+
             var esfilterObj = {};
             esfilterObj.and = [];
             var tempVal = '';
@@ -65,7 +70,7 @@
                 // if ( tempVal ){
                 //     var tempOpr = $subject.find('div#summary_field select[name="short_desc_type"]').val();
                 // }
-                console.log( esfilterObj );
+                console.log( esfilterObj.and );
             /******************
                 End of parsing top most summary input (needs regex filter)
             ******************/
