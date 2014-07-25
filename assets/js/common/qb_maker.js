@@ -65,6 +65,7 @@
                 // if ( tempVal ){
                 //     var tempOpr = $subject.find('div#summary_field select[name="short_desc_type"]').val();
                 // }
+                console.log( esfilterObj );
             /******************
                 End of parsing top most summary input (needs regex filter)
             ******************/
