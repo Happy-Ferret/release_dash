@@ -8,7 +8,17 @@
         High level function that is being called
         Handles all the coordination and simple work
     *****************/
-        function bzSearchToQb( html, start, end, cluster ){
+        function bzSearchToQb( bzURL, start, end, cluster ){
+
+            console.log("bzURL");
+
+            
+            var bzURL = bzURL.split('?');
+
+            var result = URI.parseQuery( bzURL );
+
+            console.log(result);
+
             var qbQuery = {};
 
             qbQuery.from    = cluster;

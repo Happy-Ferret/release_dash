@@ -8,44 +8,10 @@
         $target.attr('disabled', true);
 
         bzURL = $button.closest('div.input-group').find('input#query-bz').val();
-        var bzURL = bzURL.split('?');
-        if ( !bzURL[1] ) {
-            // If it is not found, we have a problem
-            alert('No bugzilla query found.');
-            $button.removeClass('disabled');
-            $target.removeAttr('disabled');
-            return;
-        }
 
-        // Generate the URL as a string then send a request to our dashboard
-        // The dashboard's API performs a CURL on bugzilla and returns the page as a string of HTML
-        // Note: It is not possible to do javascript requests to external sites, hence the internal API
-        var bzQueryURL = 'https://bugzilla.mozilla.org/query.cgi?' + bzURL[1];
-
-        $.ajax({
-            url: '/api/misc/exthtml',
-            data: { source : bzQueryURL },
-            type: 'POST',
-            success: function( response ) {
-                // Start building the Qb query with all our parameters
-                var qbQuery = bzSearchToQb( response, '@birthday', '@timestamp', 'public_bugs' );
+        // Start building the Qb query with all our parameters
+        var qbQuery = bzSearchToQb( bzURL, '@birthday', '@timestamp', 'public_bugs' );
                 
-                $button.removeClass('disabled');
-                $target.removeAttr('disabled');
-
-                $target.css( 'background', '#E5FFDD' );
-                $target.text( qbQuery );
-                setTimeout(function() {
-                    $target.css( 'background', '' );
-                }, 1500);
-            }, 
-            error: function(response) {
-                alert('Fail: Bugzilla could not be reached.');
-                $button.removeClass('disabled');
-                $target.removeAttr('disabled');
-                console.log(response);
-            }
-        });
     }
 
 
