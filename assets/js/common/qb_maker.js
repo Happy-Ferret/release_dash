@@ -56,12 +56,15 @@
             /******************
                 Parses top most summary input (needs regex filter)
             ******************/
-                tempVal = $subject.find('div#summary_field input#short_desc').val() ;
-                if ( tempVal ){
-                    var tempOpr = $subject.find('div#summary_field select[name="short_desc_type"]').val();
-                    var terms = fovQb( 'short_desc', tempOpr, tempVal );
+                if ('short_desc' in params) {
+                    var terms = fovQb( 'short_desc', params['short_desc_type'], params['short_desc'] );
                     esfilterObj.and.push( terms );
+                    
                 }
+                // tempVal = $subject.find('div#summary_field input#short_desc').val() ;
+                // if ( tempVal ){
+                //     var tempOpr = $subject.find('div#summary_field select[name="short_desc_type"]').val();
+                // }
             /******************
                 End of parsing top most summary input (needs regex filter)
             ******************/
