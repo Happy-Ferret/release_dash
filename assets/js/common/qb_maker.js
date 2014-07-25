@@ -65,18 +65,14 @@
                     esfilterObj.and.push( terms );
                     
                 }
-                // tempVal = $subject.find('div#summary_field input#short_desc').val() ;
-                // if ( tempVal ){
-                //     var tempOpr = $subject.find('div#summary_field select[name="short_desc_type"]').val();
-                // }
-                console.log( esfilterObj );
+            
             /******************
                 End of parsing top most summary input (needs regex filter)
             ******************/
 
 
             /****************** 
-                Parses the two rows of multi-select grids
+                Parses the field labels
             ******************/
                 var search_field_grid = [ 
                     'classification', 
@@ -103,7 +99,7 @@
                 });
 
             /****************** 
-                End of parsing the two rows of multi-select grids
+                End of parsing the field labels
             ******************/
 
 
@@ -112,18 +108,8 @@
             ******************/
                 var search_field_row = [ 'longdesc', 'bug_file_loc', 'status_whiteboard', 'keywords', 'bug_id', 'votes' ];
                 $.each( search_field_row, function( key, rowName ){
-                    tempVal = $subject.find('div.search_field_row').find('input#'+rowName).val() ;  
-                    console.log($subject.find('div.search_field_row').find('input#'+rowName));
-                    console.log("tempVal: "+tempVal);
-                    if ( tempVal.length > 0 ){
-                        var tempOpr = '';
-                        if ( rowName == 'votes' ){
-                            tempOpr = $subject.find('div.search_field_row').find('input[name="votes_type"]').val();
-                        } else {
-                            tempOpr = $subject.find('div.search_field_row').find('select[name="'+rowName+'_type"] option:selected').val();
-                        }
-
-                        var terms = fovQb( rowName, tempOpr, tempVal );
+                    if (rowName in params) {
+                        var terms = fovQb( rowName, params[rowName+'_type'], params[rowName] );
                         esfilterObj.and.push( terms );
                     }
                 });
@@ -131,6 +117,10 @@
                 End of parsing the six rows directly below "Detailed Bug Information"
             ******************/
 
+                console.log( esfilterObj );
+
+
+                // stops here
 
             /*********************
                 Parses the email search fields
