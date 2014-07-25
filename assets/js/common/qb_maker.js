@@ -156,24 +156,33 @@
             /*********************
                 Parses the change history fields
             *********************/
-                chFlds = $subject.find('select[name="chfield"] option:selected').map(function(){return $(this).val();}).get() ;  
-                if ( chFlds.length > 0 ) {
+                if ( 'chfield' in params ) {
                     var chObj = {};
                     chObj.and = [];
 
-                    var start = $subject.find('input[name="chfieldfrom"]').val();
-                    start = makeESDates( start );
-                    startObj = {};
-                    startObj["range"] = { "expires_on" : {"gte":start} };
-                    chObj.and.push( startObj );
-                    
-                    var end   = $subject.find('input[name="chfieldto"]').val();
-                    end   = makeESDates( end );
-                    endObj = {};
-                    endObj["range"] = { "modified_ts" : {"lte":end} };
-                    chObj.and.push( endObj );
+                    var nestedObjAnd = [{"terms": {"changes.field_name" : params['chfield']  } }];
 
-                    tempVal   = $subject.find('input[name="chfieldvalue"]').val();
+                    if ( 'chfieldfrom' in params ) {
+                        var start = params['chfieldfrom'];
+                        start = makeESDates( start );
+                        startObj = {};
+                        startObj["range"] = { "expires_on" : {"gte":start} };
+                        chObj.and.push( startObj );
+                    }
+
+                    if ( 'chfieldto' in params ) {
+                        var end = params['chfieldto'];
+                        end = makeESDates( end );
+                        endObj = {};
+                        endObj["range"] = { "modified_ts" : {"lte":end} };
+                        chObj.and.push( endObj );
+                    }
+
+                    if ( 'chfieldvalue' in params ) {
+                        var tempVal = params['chfieldvalue'];
+                        var chfieldvalueparams = {"term" : {"changes.new_value"  : tempVal } };
+                        nestedObjAnd.push( chfieldvalueparams );
+                    }
                     var nestedObj = { 
                                         "nested": {
                                              "path": "changes",
@@ -181,10 +190,7 @@
                                                 "filtered":{
                                                     "query":{ "match_all":{} },
                                                     "filter":{
-                                                        "and":[
-                                                            {"terms": {"changes.field_name" : chFlds  } },
-                                                            {"term" : {"changes.new_value"  : tempVal } }
-                                                        ]
+                                                        "and": nestedObjAnd
                                                     }
                                                 }
                                             }
