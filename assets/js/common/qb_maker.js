@@ -125,25 +125,50 @@
             /*********************
                 Parses the email search fields
             *********************/
+
                 var search_email_fields = [ 1, 2, 3 ];
                 var roles = [ 'assigned_to', 'reporter', 'qa_contact', 'cc', 'longdesc' ];
                 $.each( search_email_fields, function( key, col ){
-                    tempVal = $subject.find('div.search_email_fields').find('input#email'+col).val() ;
-                    if ( tempVal.length > 0 ){
+                    if ( 'email'+col in params ) {
+                        tempVal = params['email'+col];
+
                         var subObj = {};
                         subObj.or = [];
 
-                        var tempOpr = $subject.find('div.search_email_fields').find('select[name="emailtype'+col+'"] option:selected').val();
+                        var tempOpr = params['emailtype'+col];
+
                         $.each( roles, function( key, role ){
-                            var isChecked = $subject.find('div.search_email_fields').find('input#email'+role+col+':checked').length;
-                            if ( isChecked > 0 ){
+                            if ( 'email'+'role'+col in params ) {
                                 subObj.or.push( fovQb(role, tempOpr, tempVal) );
                             }
                         });
 
                         esfilterObj.and.push( subObj );
+
                     }
                 });
+
+
+
+                // var search_email_fields = [ 1, 2, 3 ];
+                // var roles = [ 'assigned_to', 'reporter', 'qa_contact', 'cc', 'longdesc' ];
+                // $.each( search_email_fields, function( key, col ){
+                //     tempVal = $subject.find('div.search_email_fields').find('input#email'+col).val() ;
+                //     if ( tempVal.length > 0 ){
+                //         var subObj = {};
+                //         subObj.or = [];
+
+                //         var tempOpr = $subject.find('div.search_email_fields').find('select[name="emailtype'+col+'"] option:selected').val();
+                //         $.each( roles, function( key, role ){
+                //             var isChecked = $subject.find('div.search_email_fields').find('input#email'+role+col+':checked').length;
+                //             if ( isChecked > 0 ){
+                //                 subObj.or.push( fovQb(role, tempOpr, tempVal) );
+                //             }
+                //         });
+
+                //         esfilterObj.and.push( subObj );
+                //     }
+                // });
             /*********************
                 End of parsing the email search fields
             *********************/
