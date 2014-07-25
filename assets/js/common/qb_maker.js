@@ -117,7 +117,6 @@
                 End of parsing the six rows directly below "Detailed Bug Information"
             ******************/
 
-                console.log( esfilterObj );
 
 
                 // stops here
@@ -149,26 +148,6 @@
                 });
 
 
-
-                // var search_email_fields = [ 1, 2, 3 ];
-                // var roles = [ 'assigned_to', 'reporter', 'qa_contact', 'cc', 'longdesc' ];
-                // $.each( search_email_fields, function( key, col ){
-                //     tempVal = $subject.find('div.search_email_fields').find('input#email'+col).val() ;
-                //     if ( tempVal.length > 0 ){
-                //         var subObj = {};
-                //         subObj.or = [];
-
-                //         var tempOpr = $subject.find('div.search_email_fields').find('select[name="emailtype'+col+'"] option:selected').val();
-                //         $.each( roles, function( key, role ){
-                //             var isChecked = $subject.find('div.search_email_fields').find('input#email'+role+col+':checked').length;
-                //             if ( isChecked > 0 ){
-                //                 subObj.or.push( fovQb(role, tempOpr, tempVal) );
-                //             }
-                //         });
-
-                //         esfilterObj.and.push( subObj );
-                //     }
-                // });
             /*********************
                 End of parsing the email search fields
             *********************/
@@ -214,10 +193,13 @@
                     chObj.and.push( nestedObj );
                     esfilterObj.and.push( chObj );
                 }
+
+
             /*********************
                 End of parsing the change history fields
             *********************/
 
+                console.log( esfilterObj );
 
             /*********************
                 Parses the custom search section
