@@ -13,7 +13,6 @@
             
             var bzURL = bzURL.split('?')[1];
             var params = URI.parseQuery( bzURL );
-            console.log( params );
 
             var qbQuery = {};
 
@@ -70,7 +69,7 @@
                 // if ( tempVal ){
                 //     var tempOpr = $subject.find('div#summary_field select[name="short_desc_type"]').val();
                 // }
-                console.log( esfilterObj.and );
+                console.log( esfilterObj );
             /******************
                 End of parsing top most summary input (needs regex filter)
             ******************/
@@ -93,19 +92,16 @@
                     'op_sys' 
                 ];
                 $.each( search_field_grid, function( key, gridName ){
-                    tempVal = $subject.find('div#container_'+ gridName +' select#'+ gridName +' option:selected').map(function(){return $(this).val();}).get() ;  
-                    if ( tempVal.length > 0 ){
-                        var terms = {};
-                        
-                        // search works on lower case only
-                        $.each( tempVal, function( key, value ){
-                            tempVal[key] = value.toLowerCase();
+                    var terms = {};
+                    if (gridName in params) {
+                        $.each(params[gridName], function( paramsKey, value ){                            
+                            params[gridName][paramsKey] = value.toLowerCase();
                         });
-                        
-                        terms[gridName] = tempVal;
+                        terms[gridName] = params[gridName];
                         esfilterObj.and.push( { "terms" : terms } );
                     }
                 });
+
             /****************** 
                 End of parsing the two rows of multi-select grids
             ******************/

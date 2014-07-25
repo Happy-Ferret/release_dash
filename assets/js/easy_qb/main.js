@@ -39,7 +39,6 @@
             cluster = 'public_bugs';
         }
 
-        console.log(bzURL);
         // Start building the Qb query with all our parameters
         var qbQuery = bzSearchToQb( bzURL, start, end, cluster );
 
