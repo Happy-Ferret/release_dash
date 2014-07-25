@@ -14,7 +14,31 @@
     function startLoading() {
         $.each( coreData.groups, function( group_id, group_value ) {
             $.each( group_value.queries, function( query_id, query_value ) {
-                if ($.parseJSON( query_value.qb_query )['source'] == 'talos' || $.parseJSON( query_value.qb_query )['source'] == 'crash-stats') {
+                console.log( query_value.qb_query );
+                if ( query_value.es_data !== '' ) {
+
+                    // We have some es_data sent in from the server.
+                    // Use that instead of loading fresh data from ElasticSearch
+
+                    coreData.groups[group_id].queries[query_id]['es_data'] = $.parseJSON( query_value.es_data );
+
+                    // Checks for complete es_data through this group.
+                    var dataInvalid = false;
+                    $.each( coreData.groups[group_id].queries, function( key, value ) {
+                        if( typeof value.es_data !== 'object' ) { dataInvalid = true; }
+                    });
+
+                    if ( dataInvalid === false ) {
+                        executeAll( group_id );
+
+                        //sets function parameter toSave = false
+                        var score = aggregateScores(false); 
+                        $('.rrscore').css('color', score);
+
+                    } else {
+                        console.log("Not all data is ready for "+group_value.title+".");
+                    }
+                } else if ($.parseJSON( query_value.qb_query )['source'] == 'graphs' || $.parseJSON( query_value.qb_query )['source'] == 'crash-stats') {
                     $.ajax({
                         type: "POST",
                         url: "https://dashapi.paas.allizom.org/_get_data",
@@ -28,9 +52,18 @@
                         success: function(data) {
                            coreData.groups[group_id].queries[query_id]['es_data'] = data['series_data'];
                            executeAll( group_id );
+
+                           var score = aggregateScores(false); 
+                           $('.rrscore').css('color', score);
+
+                            // Store this in the cache for future use!
+                            cacheESData( query_id, coreData.groups[group_id].queries[query_id]['es_data'] );
                         }
                     });
+
                 } else if ( $.parseJSON( query_value.qb_query )['source'] == 'telemetry' ) {
+
+                    queryData = $.parseJSON( query_value.qb_query )['data']
 
                     // Initialize telemetry.js
                     Telemetry.init(function() {
@@ -58,7 +91,6 @@
                                 measure,
                                 function(histogramEvolution) 
                             {
-                               
                                 // Let's create a list of {x: ..., y: ...} data points of submissions and
                                 // timestamps to plot with any common Javascript library.
                                 var data = histogramEvolution.map(function(date, histogram, index) {
@@ -67,45 +99,39 @@
                                     y:  histogram.submissions()
                                   };
                                 });
-                                // Use your favorite graph library to plot `data`
 
+                                // Remove data ouside of range
+                                data = data.filter(function(elm){
+                                    queryData = $.parseJSON( query_value.qb_query )['data']
+                                    if ('start_date' in queryData && (elm['x']*1000 < queryData['start_date']) ) {
+                                      return false;
+                                    }
+                                    if ('end_date' in queryData && (elm['x']*1000  > queryData['end_date']) ) {
+                                      return false;
+                                    }   
+                                    return true;
+                                });
+
+
+
+                                // Use your favorite graph library to plot `data`
                                 coreData.groups[group_id].queries[query_id]['es_data'] = data;
                                 executeAll( group_id );
 
+                                var score = aggregateScores(false); 
+                                $('.rrscore').css('color', score);
+                                // Store this in the cache for future use!
+                                cacheESData( query_id, coreData.groups[group_id].queries[query_id]['es_data'] );
                             });
                         });
                     });
-
-
-
-                } else if ( query_value.es_data !== '' ) {
-
-                    // We have some es_data sent in from the server.
-                    // Use that instead of loading fresh data from ElasticSearch
-
-                    coreData.groups[group_id].queries[query_id]['es_data'] = $.parseJSON( query_value.es_data );
-                    // Checks for complete es_data through this group.
-                    var dataInvalid = false;
-                    $.each( coreData.groups[group_id].queries, function( key, value ) {
-                        if( typeof value.es_data !== 'object' ) { dataInvalid = true; }
-                    });
-
-                    if ( dataInvalid === false ) {
-                        executeAll( group_id );
-
-                        //sets function parameter toSave = false
-                        var score = aggregateScores(false); 
-                        $('.rrscore').css('color', score);
-
-                    } else {
-                        console.log("Not all data is ready for "+group_value.title+".");
-                    }
 
                 } else {
 
                     // The es_data field appears to be blank.
                     // Server did not give us anything to load up
                     // Go to the ElasticSearch cluster and pull fresh data
+                    console.log( query_value.qb_query );
                     ESQueryRunner( 
                         $.parseJSON( query_value.qb_query ), 
                         function( response ){ // Executes after data is returned from ES.
@@ -117,7 +143,6 @@
                                 tempStore.push( { x: d , y: value } );
                             });
                             coreData.groups[group_id].queries[query_id]['es_data'] = tempStore;
-                            console.log(tempStore);
                             // End of formatting the returned ElasticSearch data for Rickshaw compatibility
 
                             // Checks for complete es_data through this group.
@@ -211,6 +236,7 @@
         });
 
         // Start the plot
+        // document.querySelector('.plot#g'+group_id).innerHTML = "";
         var graph = new Rickshaw.Graph({
             element: document.querySelector('.plot#g'+group_id),
             width: $('.group#g' + group_id).width() * 0.90,
@@ -268,6 +294,10 @@
                     logNumber = value.es_data[i].y;
                 }
             }
+
+            if (logNumber.toString().length > 4) {
+                logNumber = logNumber.toPrecision(3).toString();
+            };
 
             $('.group-number #q'+key).html(
                 '<h2 style="color:'+font_colour+';">' + 
@@ -348,6 +378,57 @@
                     }
                 });
 
+                var catColoring = {};
+
+                $.each( coreData.categories, function(id,  category ){
+                    catColoring[category] = {};
+                    catColoring[category]['greenCount'] = 0;
+                    catColoring[category]['yellowCount'] = 0;
+                    catColoring[category]['redCount'] = 0;
+                    catColoring[category]['score'] = 0;
+
+                    $.each( ruledGroups, function( group_id, group ){
+                        if ( group.category == category ) {
+                            if ( aggregateOptions[group_id].isShipwrecker && group.status == 'red' ) {
+                                catColoring[category]['redCount'] = catColoring[category]['redCount'] + 9999999 ; //maxout the redcount
+                            
+                            } else if ( aggregateOptions[group_id].isSignificant ) {
+                                
+                                if ( group.status == 'green' ){
+                                    catColoring[category]['greenCount']++;
+                                
+                                } else if ( group.status == 'yellow' ){
+                                    catColoring[category]['yellowCount']++;
+                                
+                                } else if ( group.status == 'red' ){
+                                    catColoring[category]['redCount']++;
+                                
+                                }
+                            
+                            } else { 
+                                // do nothing. group is not shipwrecker and not significant
+                            }
+                        }
+                    });
+                    if ( catColoring[category]['greenCount'] != 0 || catColoring[category]['yellowCount'] != 0 || catColoring[category]['redCount'] != 0 ) {
+                        var highScore = Math.max(catColoring[category]['redCount'], catColoring[category]['yellowCount'], catColoring[category]['greenCount']);
+                        if ( highScore == catColoring[category]['redCount'] ){
+                            // $('#panel-'+category).removeClass('panel-default');
+                            $('#badge-'+category).addClass('alert-danger');
+                        } else if ( highScore == catColoring[category]['yellowCount'] ) {
+                            // $('#panel-'+category).removeClass('panel-default');
+                            $('#badge-'+category).addClass('alert-warning');
+                        } else {
+                            // $('#panel-'+category).removeClass('panel-default');
+                            $('#badge-'+category).addClass('alert-success');
+                        }
+                    }
+
+                });
+                
+                console.log(catColoring);
+
+
                 var score = '';
                 if ( greenCount != 0 || yellowCount != 0 || redCount != 0 ) {
                     var highScore = Math.max(redCount, yellowCount, greenCount);
@@ -383,6 +464,12 @@
                 version_score : score
             },
             success: function(response) {
+                // For the selenium hacking
+                var div = document.createElement("div");
+                div.setAttribute("id", "pageCompletedSignal")
+                document.body.appendChild(div);
+
+                console.log("done!");
                 console.log(response);
             }, 
             error: function(response) {

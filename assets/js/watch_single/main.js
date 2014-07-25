@@ -2,6 +2,10 @@ jQuery(document).ready(function($) {
 /*********************************
     JUST SETTING UP THE PAGE HERE
 *********************************/
+
+    // Make page visible on load
+    $("#main-content").css("visibility","visible");
+
     // Initializing duckster gridster
     var gridsterWidth = $('.gridster').width();
     if ( gridsterWidth  < 600 ){
@@ -43,6 +47,10 @@ jQuery(document).ready(function($) {
 /*********************************
     SAVING NEW GROUPS AND QUERIES
 *********************************/
+
+    // Set the modal category dropdown
+    $('.modal#new-group').find('#category-options').html( categoryNewOptions( coreData['categories']) );
+
     // Append a new HTML query template for the group
     $('.btn#new-query-template').click( function() {
         var thisNum = uniqueid();
@@ -68,10 +76,8 @@ jQuery(document).ready(function($) {
             quickQbmaker($this);
         });
 
-
         // Change the fields based on the data source selected
         $('select#data-source').change(function() {
-            // console.log("the value is "+$(this).val());
             dataSource = $(this).val();
             $(".data-form[id='"+thisNum+"']").html(templateDataInput(dataSource, thisNum));
         });
@@ -105,6 +111,9 @@ jQuery(document).ready(function($) {
             $modal.find('input#group-is-number').prop( "checked", false );
         }
         
+        // Set the modal category dropdown
+        $modal.find('#category-options').html( categoryOptions(groupID, thisGroup, coreData['categories']) );
+
         $.each( thisGroup.queries, function( key, value ){
             if ( value.is_reference ){
                 setTimeout(function(){
@@ -124,7 +133,9 @@ jQuery(document).ready(function($) {
                         $(".colourpicker[id='q"+key+"']").css( 'color', color.toHexString() );
                     }
                 });
-            }
+            } 
+
+
         });
 
         $('.btn#delete-old-group').attr('data-group-id', groupID );

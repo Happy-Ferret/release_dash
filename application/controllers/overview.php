@@ -13,6 +13,7 @@ class Overview extends CI_Controller {
         log_message('info', 'Accessing controller function in /overview.php/index');
         $data = array();
 
+
         //  Find a list of all products
         $products = $this->product->retrieve();
         foreach ( $products as $product ) {
@@ -58,6 +59,7 @@ class Overview extends CI_Controller {
                 $data[$product->tag]['groups'][$group->id]['is_plot']  = ($group->is_plot == '1') ? true : false ;
                 $data[$product->tag]['groups'][$group->id]['is_number'] = ($group->is_number == '1') ? true : false ;
                 $data[$product->tag]['groups'][$group->id]['is_default'] = true;
+                $data[$product->tag]['groups'][$group->id]['category'] = $group->category;
                 $data[$product->tag]['groups'][$group->id]['queries'] = array();
 
                 // Retrieve the stored Qb queries in this group.
@@ -72,17 +74,29 @@ class Overview extends CI_Controller {
                         $data[$product->tag]['groups'][$group->id]['queries'][$query->id]['colour']   = $query->colour;
                         $data[$product->tag]['groups'][$group->id]['queries'][$query->id]['qb_query'] = $query->query_qb;
                         $data[$product->tag]['groups'][$group->id]['queries'][$query->id]['bz_query'] = $query->query_bz;
-                        
+
+                        // Determine the query data source
+                        $data[$product->tag]['groups'][$group->id]['queries'][$query->id]['source']   = $this->_query_source( $data[$product->tag]['groups'][$group->id]['queries'][$query->id] );        
+
                     } else {
                         // This query is a reference one. It references a parent query.
                         // Append referenced version's ID as a property to parent query's object in $data
                         $reference = explode(',', $query->references);
                         $parent_id = $reference[0];
                         $ref_version_id = $reference[1];
-                        $data[$product->tag]['groups'][$group->id]['queries'][$parent_id]['reference'] = $ref_version_id;
-                           
+                        $data[$product->tag]['groups'][$group->id]['queries'][$parent_id]['reference'] = $ref_version_id;           
                     }
                 }
+            }
+        }
+        // Adding the list of categories
+        $data['categories'] = array();
+        $groups = $this->group->retrieve();
+        
+        foreach ($groups as $group) {
+            // Add the category to the categories if not in it already
+            if (empty($data['categories']) || !in_array($group->category, $data['categories'])) {
+                array_push($data['categories'], $group->category);
             }
         }
 
@@ -92,5 +106,16 @@ class Overview extends CI_Controller {
                 'data' => $data
             )
         );
+    }
+
+    // returns the determined source of the query
+    private function _query_source( $query = array() ) {
+        $source = 'bugzilla';
+        if (!is_null(json_decode($query['qb_query']))) {
+            if (property_exists(json_decode($query['qb_query']), 'source')) {
+                $source = json_decode($query['qb_query'])->source;
+            }
+        }
+        return $source;
     }
 }

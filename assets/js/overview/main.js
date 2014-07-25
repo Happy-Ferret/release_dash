@@ -24,13 +24,20 @@ jQuery(document).ready(function($) {
 /*********************************
     SAVING NEW GROUPS AND QUERIES
 *********************************/
+    
     // Brings up the modal for adding a new group
     $('.btn#add-new-group').click(function(){
         var product_tag = $(this).closest('div.product.row').attr('id');
+
+
         
         // Clean up modal from prior viewing of existing groups
         $('.modal#new-group').find('div.query').remove();
         $('.modal#new-group').find('.btn#save-new-group').data('product_tag', product_tag );
+
+        // Set the modal category dropdown
+        $('.modal#new-group').find('#category-options').html( categoryNewOptions( coreData['categories']) );
+
         $('.modal#new-group').modal('toggle');
     });
 
@@ -58,6 +65,13 @@ jQuery(document).ready(function($) {
             var $this = $(this);
             quickQbmaker($this);
         });
+
+        // Change the fields based on the data source selected
+        $('select#data-source').change(function() {
+            dataSource = $(this).val();
+            $(".data-form[id='"+thisNum+"']").html(templateDataInput(dataSource, thisNum));
+        });
+
         
     });
 
@@ -88,6 +102,9 @@ jQuery(document).ready(function($) {
         } else {
             $modal.find('input#group-is-number').prop( "checked", false );
         }
+
+        // Set the modal category dropdown
+        $modal.find('#category-options').html( categoryOptions(groupID, thisGroup, coreData['categories']) );
         
         $.each( thisGroup.queries, function( query_id, query ){
             // Append the html for each query

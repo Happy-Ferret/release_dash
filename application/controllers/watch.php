@@ -56,6 +56,9 @@ class Watch extends CI_Controller {
         $data['channel'] = $this->channel->for_version( $version->id );
         $data['groups'] = array();
 
+        // Adding the list of categories
+        $data['categories'] = array();
+        
         // Retrieving default groups by product
         $by_product = array( 
             'entity'    => 'product',
@@ -65,22 +68,27 @@ class Watch extends CI_Controller {
         $groups_by_product = $this->group->retrieve( $by_product );
         $data = $this->_groups_to_data( $data, $version, $groups_by_product, true );
 
+
+        $groups_all = $this->group->retrieve();
+
+        foreach ( $groups_all as $group ) {
+            // Add the category to the categories if not in it already
+            if (empty($data['categories']) || !in_array($group->category, $data['categories'])) {
+                array_push($data['categories'], $group->category);
+            }
+
+        }
+
         // Retrieving custom groups by version
         $by_version = array( 
             'entity'    => 'version',
             'entity_id' => $version->id 
         );
         
+
         $groups_by_version = $this->group->retrieve( $by_version );
         $data = $this->_groups_to_data( $data, $version, $groups_by_version );
         
-        // Adding the list of categories
-        $data['categories'] = array(
-            'bugzilla',
-            'talos',
-            'crash-stats',
-            'telemetry'
-        );
 
         $this->blade->render('watch_single', 
             array(
@@ -126,6 +134,7 @@ class Watch extends CI_Controller {
             $queries = $this->query->retrieve( $by_group );
 
             $count_main_queries = 0;
+
             foreach ( $queries as $query ) {
                 $query_title = '';
                 $query_bugzilla = '';
@@ -220,33 +229,26 @@ class Watch extends CI_Controller {
             // If group only has one query (excluding any references), enable component breakdown view
             $data['groups'][$group->id]['enableComponents'] = ($count_main_queries == 1) ? true : false ;
 
-            // Use the first query's source as the group category
-            $data['groups'][$group->id]['category'] = $data['groups'][$group->id]['queries'][key($data['groups'][$group->id]['queries'])]['source']; 
+            // Use the databse category as the category
+            $data['groups'][$group->id]['category'] = $group->category; 
+
 
         }
+
+
 
         return $data;
     }
 
-
-    // returns the determined source of the group
+    // returns the determined source of the query
     private function _query_source( $query = array() ) {
-        $source = '';
-        if (array_key_exists('source', json_decode($query['qb_query'], true))) {
-            $source = json_decode($query['qb_query'], true)['source'];
-        } else {
-            $source = 'bugzilla';
+        $source = 'bugzilla';
+        if (!is_null(json_decode($query['qb_query']))) {
+            if (property_exists(json_decode($query['qb_query']), 'source')) {
+                $source = json_decode($query['qb_query'])->source;
+            }
         }
-
-        if ( $source == 'talos' ) {
-            return 'talos';
-        } elseif ( $source == 'crash-stats' ) {
-            return 'crash-stats';
-        } elseif ( $source == 'telemetry' ) {
-            return 'telemetry';
-        } else {
-            return 'bugzilla';
-        }
-        return 'bugzilla';
+        return $source;
     }
+
 }

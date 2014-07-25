@@ -84,7 +84,13 @@
          cursor:pointer;  
     }
 
+    #main-content {
+        visibility:hidden;
+    }
 
+    .section h2 {
+        margin-top: 10px;
+    }
 
 /***********************/
 /* GRAPHING PROPERTIES */
