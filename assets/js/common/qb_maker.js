@@ -10,14 +10,8 @@
     *****************/
         function bzSearchToQb( bzURL, start, end, cluster ){
 
-            console.log("bzURL");
-
-            
-            var bzURL = bzURL.split('?');
-
-            var result = URI.parseQuery( bzURL );
-
-            console.log(result);
+            var bzURL = bzURL.split('?')[1];
+            var params = URI.parseQuery( bzURL );
 
             var qbQuery = {};
 
@@ -31,9 +25,9 @@
 
             // Replace password fields with text fields in the HTML
             // Prevents false security errors from appearing in console
-            html = html.replace('type="password"', 'type="text"');
-            $extract = $('form#queryform', html);
-            qbQuery.esfilter = parseBzSearch( $extract );
+
+            // $extract = $('form#queryform', html);
+            qbQuery.esfilter = parseBzSearch( params );
 
             qbQuery.edges = [{
                     "range": {
@@ -54,7 +48,7 @@
     /****************** 
         Applies jQuery to extract Bugzilla search params from HTML
     ******************/
-        function parseBzSearch( $subject ){
+        function parseBzSearch( params ){
             var esfilterObj = {};
             esfilterObj.and = [];
             var tempVal = '';
