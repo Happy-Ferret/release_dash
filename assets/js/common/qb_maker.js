@@ -205,6 +205,7 @@
                 End of parsing the change history fields
             *********************/
 
+
             /*********************
                 Parses the custom search section
             *********************/
@@ -265,6 +266,7 @@
                                     customParams += ',';
                                 }
                                 customParams += JSON.stringify( subObj );
+                console.log( customParams );
 
                             }
                             while ( openedBrackets > 0 ){
@@ -540,7 +542,7 @@
             if ( identifier.length == 0 ) {
                 clauseValue = 'and';
             } else {
-                if ( $clause.val().toLowerCase() != 'or' ){ // Watch out for "and_g"
+                if ( identifier.toLowerCase() != 'or' ){ // Watch out for "and_g"
                     clauseValue = 'and';
                 } else {
                     clauseValue = 'or';
