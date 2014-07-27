@@ -266,37 +266,38 @@
                                 }
                                 customParams += JSON.stringify( subObj );
 
-                        }
-                        while ( openedBrackets > 0 ){
-                            customParams += "]}";
-                            
-                            if ( hasNegatives.length > 0 ) {    
-                                hasNegative = hasNegatives.pop();
-                                if ( hasNegative ) {
-                                    customParams += '}';
+                            }
+                            while ( openedBrackets > 0 ){
+                                customParams += "]}";
+                                
+                                if ( hasNegatives.length > 0 ) {    
+                                    hasNegative = hasNegatives.pop();
+                                    if ( hasNegative ) {
+                                        customParams += '}';
+                                    }
                                 }
-                            }
-                            openedBrackets--;
-                        }
-
-                        // Sometimes we get end up with multiple commas
-                        customParams = customParams.replace(/[,]+/g , ",");
-                        console.log("customParams: "+customParams);
-
-                        try {
-                            var customJson = JSON.parse(customParams);
-                            customJson = deleteEmpty( customJson );
-                            console.log("customJson: "+customJson);
-
-                            if ( !$.isEmptyObject(customJson) ) {
-                                esfilterObj.and.push( customJson );        
+                                openedBrackets--;
                             }
 
+                            // Sometimes we get end up with multiple commas
+                            customParams = customParams.replace(/[,]+/g , ",");
+                            console.log("customParams: "+customParams);
 
-                        } catch (e) {
-                            alert( "Failed: Could not parse custom fields" );
-                            console.log(customParams);
-                            console.log(e);
+                            try {
+                                var customJson = JSON.parse(customParams);
+                                customJson = deleteEmpty( customJson );
+                                console.log("customJson: "+customJson);
+
+                                if ( !$.isEmptyObject(customJson) ) {
+                                    esfilterObj.and.push( customJson );        
+                                }
+
+
+                            } catch (e) {
+                                alert( "Failed: Could not parse custom fields" );
+                                console.log(customParams);
+                                console.log(e);
+                            }
                         }
                     }
                 });
