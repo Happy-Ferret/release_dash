@@ -205,118 +205,111 @@
                 End of parsing the change history fields
             *********************/
 
-                console.log( esfilterObj );
-
             /*********************
                 Parses the custom search section
             *********************/
+
                 var customParams = '';
-                var $customSearch = $subject.find('div#custom_search_filter_section');
-                var clause = getCustomClause( $customSearch, 'j_top' );
-                customParams += '{"'+clause+'":[';
-                
+                if ( 'j_top' in params) {
+                    var clause = getCustomClause(params['j_top']);
+                    customParams += '{"'+clause+'":[';
+                }
+
                 var hasNegatives = [];
                 var openedBrackets = 1;
-                $customSearch.find('div.custom_search_condition').each(function( key ){
-                    var isOpened = $(this).find('input[type="hidden"][value="OP"]').length;
-                    var isClosed = $(this).find('input[type="hidden"][value="CP"]').length;
-                    
-                    if ( isOpened > 0 ) {
-                        if ( customParams.trim().charAt(customParams.length - 1) != '[' ) {
-                            customParams += ',';
-                        }
-
-                        var isNot = $(this).find('input.custom_search_form_field[type="checkbox"]:checked').length;
-                        if ( isNot > 0 ) {
-                            customParams += '{"not":' ;
-                            hasNegatives.push( true );
-                        } else {
-                            hasNegatives.push( false );
-                        }
-
-                        var hasClause = $(this).find('div.any_all_select select[name^="j"]').length ;
-                        if ( hasClause > 0 ) {
-                            var clauseName = $(this).find('select[name^="j"]').attr('name');
-                            clause = getCustomClause( $(this), clauseName ) ;
-                            customParams += '{"'+clause+'":[';
-                        }
-                        
-                        openedBrackets++;
-                    
-                    } else if ( isClosed > 0 ) {
-                        customParams += ']}';
-
-                        var hasNegative = hasNegatives.pop();
-                        if ( hasNegative ) {
-                            customParams += '}';
-                        }
-
-                        openedBrackets--;
-
-                    } else {
-                        var hasClause = $(this).find('div.any_all_select select[name^="j"]').length ;
-                        if ( hasClause > 0 ) {
-                            var clauseName = $(this).find('select[name^="j"]').attr('name');
-                            clause = getCustomClause( $(this), clauseName ) ;
-                            customParams += '{"'+clause+'":[';
-                        }
-                        
-                        var tempFld = $(this).find('select[name^="f"] option:selected').val();
-                        if ( typeof tempFld != 'undefined' && tempFld != 'noop' ) {
-                            var tempOpr = $(this).find('select[name^="o"] option:selected').val();
-                            var tempVal = $(this).find('input[name^="v"]').val();
-
-                            var isNot = $(this).find('input[name^="n"]:checked').length;
-                            var subObj = fovQb(tempFld, tempOpr, tempVal) ;
-                            if ( isNot > 0 ) {
-                                var subObj = { "not" : subObj } ;
-                            }
-
+ 
+                $.each(Object.keys(params).sort(), function(n, key) {
+                    value  = params[key];
+                    if (key[0] == 'f') {
+                        if (value == 'OP') {
                             if ( customParams.trim().charAt(customParams.length - 1) != '[' ) {
-                                customParams += ',';
+                                customParams += ','; // why?
                             }
-                            customParams += JSON.stringify( subObj );
+
+                            if ('n'+key[1] in params) {
+                                customParams += '{"not":' ;
+                                hasNegatives.push( true );
+                            } else {
+                                hasNegatives.push( false );
+                            }
+
+                            // j parsing TODO
+
+                            openedBrackets++;
+
+                        } else if (value == 'CP') {
+                            customParams += ']}';
+
+                            var hasNegative = hasNegatives.pop();
+                            if ( hasNegative ) {
+                                customParams += '}';
+                            }
+
+                            openedBrackets--;
+
+                        } else {
+                            // add the j custom group if has j TODO
+                            
+                            var tempFld = params[key];
+                            if ( typeof tempFld != 'undefined' && tempFld != 'noop' ) {
+                                var tempOpr = params['o'+key[1]];
+                                var tempVal = params['v'+key[1]];
+
+                                var isNot = params['n'+key[1]];
+                                var subObj = fovQb(tempFld, tempOpr, tempVal) ;
+                                if ( isNot > 0 ) {
+                                    var subObj = { "not" : subObj } ;
+                                }
+
+                                if ( customParams.trim().charAt(customParams.length - 1) != '[' ) {
+                                    customParams += ',';
+                                }
+                                customParams += JSON.stringify( subObj );
+
+                        }
+                        while ( openedBrackets > 0 ){
+                            customParams += "]}";
+                            
+                            if ( hasNegatives.length > 0 ) {    
+                                hasNegative = hasNegatives.pop();
+                                if ( hasNegative ) {
+                                    customParams += '}';
+                                }
+                            }
+                            openedBrackets--;
+                        }
+
+                        // Sometimes we get end up with multiple commas
+                        customParams = customParams.replace(/[,]+/g , ",");
+                        console.log("customParams: "+customParams);
+
+                        try {
+                            var customJson = JSON.parse(customParams);
+                            customJson = deleteEmpty( customJson );
+                            console.log("customJson: "+customJson);
+
+                            if ( !$.isEmptyObject(customJson) ) {
+                                esfilterObj.and.push( customJson );        
+                            }
+
+
+                        } catch (e) {
+                            alert( "Failed: Could not parse custom fields" );
+                            console.log(customParams);
+                            console.log(e);
                         }
                     }
                 });
-                
-                while ( openedBrackets > 0 ){
-                    customParams += "]}";
-                    
-                    if ( hasNegatives.length > 0 ) {    
-                        hasNegative = hasNegatives.pop();
-                        if ( hasNegative ) {
-                            customParams += '}';
-                        }
-                    }
-                    openedBrackets--;
-                }
 
-                // Sometimes we get end up with multiple commas
-                customParams = customParams.replace(/[,]+/g , ",");
-                console.log("customParams: "+customParams);
-
-                try {
-                    var customJson = JSON.parse(customParams);
-                    customJson = deleteEmpty( customJson );
-                    console.log("customJson: "+customJson);
-
-                    if ( !$.isEmptyObject(customJson) ) {
-                        esfilterObj.and.push( customJson );        
-                    }
-
-
-                } catch (e) {
-                    alert( "Failed: Could not parse custom fields" );
-                    console.log(customParams);
-                    console.log(e);
-                }
             /*********************
                 End of parsing the custom search section
             *********************/
+            console.log( esfilterObj );
+
 
             return esfilterObj;
         }
+
 
     /*****************
         Takes in a field, operator and value as strings
@@ -540,11 +533,10 @@
         Extract selections from dropdown fields
         Where users are asked to choose whether to apply all or any (and / or)
     *****************/
-        function getCustomClause( $subject, identifier ){
-            var $clause = $subject.find('div.any_all_select select#'+identifier+' option:selected');
+        function getCustomClause( identifier ){
             var clauseValue = '';
             
-            if ( $clause.length == 0 ) {
+            if ( identifier.length == 0 ) {
                 clauseValue = 'and';
             } else {
                 if ( $clause.val().toLowerCase() != 'or' ){ // Watch out for "and_g"
