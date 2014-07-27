@@ -11,9 +11,26 @@
 
         // Start building the Qb query with all our parameters
         var qbQuery = bzSearchToQb( bzURL, '@birthday', '@timestamp', 'public_bugs' );
+
+        $button.removeClass('disabled');
+        $target.removeAttr('disabled');
+
+        $target.css( 'background', '#E5FFDD' );
+        $target.text( qbQuery );
+        setTimeout(function() {
+            $target.css( 'background', '' );
+        }, 1500);
+
+
+        // else
+        // alert('Fail: Bugzilla could not be reached.');
+        // $button.removeClass('disabled');
+        // $target.removeAttr('disabled');
+        // console.log(response);
                 
     }
 
+    
 
 /*********************************
     EXTRACTION OF GROUPS AND QUERIES FROM A MODAL
