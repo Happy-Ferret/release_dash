@@ -224,7 +224,7 @@
                     if (key[0] == 'f') {
                         if (value == 'OP') {
                             if ( customParams.trim().charAt(customParams.length - 1) != '[' ) {
-                                customParams += ','; // why?
+                                customParams += ','; // why? TODO
                             }
 
                             if ('n'+key[1] in params) {
@@ -262,24 +262,24 @@
                                     var subObj = { "not" : subObj } ;
                                 }
 
-                                if ( customParams.trim().charAt(customParams.length - 1) != '[' ) {
-                                    customParams += ',';
-                                }
+                                // if ( customParams.trim().charAt(customParams.length - 1) != '[' ) { // why?? TODO
+                                //     customParams += ',';
+                                // }
                                 customParams += JSON.stringify( subObj );
-                console.log( customParams );
 
                             }
-                            while ( openedBrackets > 0 ){
-                                customParams += "]}";
+                console.log( customParams );
+                            // while ( openedBrackets > 0 ){
+                            //     customParams += "]}";
                                 
-                                if ( hasNegatives.length > 0 ) {    
-                                    hasNegative = hasNegatives.pop();
-                                    if ( hasNegative ) {
-                                        customParams += '}';
-                                    }
-                                }
-                                openedBrackets--;
-                            }
+                            //     if ( hasNegatives.length > 0 ) {    
+                            //         hasNegative = hasNegatives.pop();
+                            //         if ( hasNegative ) {
+                            //             customParams += '}';
+                            //         }
+                            //     }
+                            //     openedBrackets--;
+                            // }
 
                             // Sometimes we get end up with multiple commas
                             customParams = customParams.replace(/[,]+/g , ",");
@@ -303,11 +303,117 @@
                         }
                     }
                 });
-
             /*********************
                 End of parsing the custom search section
             *********************/
             console.log( esfilterObj );
+
+/*********************            *********************
+
+                var customParams = '';
+                var $customSearch = $subject.find('div#custom_search_filter_section');
+                var clause = getCustomClause( $customSearch, 'j_top' );
+                customParams += '{"'+clause+'":[';
+                
+                var hasNegatives = [];
+                var openedBrackets = 1;
+                $customSearch.find('div.custom_search_condition').each(function( key ){
+                    var isOpened = $(this).find('input[type="hidden"][value="OP"]').length;
+                    var isClosed = $(this).find('input[type="hidden"][value="CP"]').length;
+                    
+                    if ( isOpened > 0 ) {
+                        if ( customParams.trim().charAt(customParams.length - 1) != '[' ) {
+                            customParams += ',';
+                        }
+
+                        var isNot = $(this).find('input.custom_search_form_field[type="checkbox"]:checked').length;
+                        if ( isNot > 0 ) {
+                            customParams += '{"not":' ;
+                            hasNegatives.push( true );
+                        } else {
+                            hasNegatives.push( false );
+                        }
+
+                        var hasClause = $(this).find('div.any_all_select select[name^="j"]').length ;
+                        if ( hasClause > 0 ) {
+                            var clauseName = $(this).find('select[name^="j"]').attr('name');
+                            clause = getCustomClause( $(this), clauseName ) ;
+                            customParams += '{"'+clause+'":[';
+                        }
+                        
+                        openedBrackets++;
+                    
+                    } else if ( isClosed > 0 ) {
+                        customParams += ']}';
+
+                        var hasNegative = hasNegatives.pop();
+                        if ( hasNegative ) {
+                            customParams += '}';
+                        }
+
+                        openedBrackets--;
+
+                    } else {
+                        var hasClause = $(this).find('div.any_all_select select[name^="j"]').length ;
+                        if ( hasClause > 0 ) {
+                            var clauseName = $(this).find('select[name^="j"]').attr('name');
+                            clause = getCustomClause( $(this), clauseName ) ;
+                            customParams += '{"'+clause+'":[';
+                        }
+                        
+                        var tempFld = $(this).find('select[name^="f"] option:selected').val();
+                        if ( typeof tempFld != 'undefined' && tempFld != 'noop' ) {
+                            var tempOpr = $(this).find('select[name^="o"] option:selected').val();
+                            var tempVal = $(this).find('input[name^="v"]').val();
+
+                            var isNot = $(this).find('input[name^="n"]:checked').length;
+                            var subObj = fovQb(tempFld, tempOpr, tempVal) ;
+                            if ( isNot > 0 ) {
+                                var subObj = { "not" : subObj } ;
+                            }
+
+                            if ( customParams.trim().charAt(customParams.length - 1) != '[' ) {
+                                customParams += ',';
+                            }
+                            customParams += JSON.stringify( subObj );
+                        }
+                    }
+                });
+                
+                while ( openedBrackets > 0 ){
+                    customParams += "]}";
+                    
+                    if ( hasNegatives.length > 0 ) {    
+                        hasNegative = hasNegatives.pop();
+                        if ( hasNegative ) {
+                            customParams += '}';
+                        }
+                    }
+                    openedBrackets--;
+                }
+
+                // Sometimes we get end up with multiple commas
+                customParams = customParams.replace(/[,]+/g , ",");
+                console.log("customParams: "+customParams);
+
+                try {
+                    var customJson = JSON.parse(customParams);
+                    customJson = deleteEmpty( customJson );
+                    console.log("customJson: "+customJson);
+
+                    if ( !$.isEmptyObject(customJson) ) {
+                        esfilterObj.and.push( customJson );        
+                    }
+
+
+                } catch (e) {
+                    alert( "Failed: Could not parse custom fields" );
+                    console.log(customParams);
+                    console.log(e);
+                }
+*******************            *********************/
+
+
 
 
             return esfilterObj;
