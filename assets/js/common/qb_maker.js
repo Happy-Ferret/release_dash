@@ -65,7 +65,8 @@
                     esfilterObj.and.push( terms );
                     
                 }
-            
+
+
             /******************
                 End of parsing top most summary input (needs regex filter)
             ******************/
@@ -88,15 +89,25 @@
                     'op_sys' 
                 ];
                 $.each( search_field_grid, function( key, gridName ){
+                    console.log(gridName);
                     var terms = {};
                     if (gridName in params) {
-                        $.each(params[gridName], function( paramsKey, value ){                            
+                        console.log("in "+gridName);
+                        var tmp = params[gridName];
+                        console.log("tmp "+tmp);   
+                        console.log(typeof tmp);                     
+                        $.each(tmp, function( paramsKey, value ){                            
+                            console.log("each "+gridName);
                             params[gridName][paramsKey] = value.toLowerCase();
+
                         });
                         terms[gridName] = params[gridName];
                         esfilterObj.and.push( { "terms" : terms } );
                     }
                 });
+
+                console.log( esfilterObj );
+
 
             /****************** 
                 End of parsing the field labels
