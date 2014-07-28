@@ -89,13 +89,12 @@
                     'op_sys' 
                 ];
                 $.each( search_field_grid, function( key, gridName ){
-                    console.log(gridName);
                     var terms = {};
                     if (gridName in params) {
-                        console.log("in "+gridName);
-                        var tmp = params[gridName];
-                        console.log("tmp "+tmp);   
-                        console.log(typeof tmp);                     
+                        if (typeof params[gridName] === 'string' ) {
+                            params[gridName] = [params[gridName]];
+                        }
+                        var tmp = params[gridName];               
                         $.each(tmp, function( paramsKey, value ){                            
                             console.log("each "+gridName);
                             params[gridName][paramsKey] = value.toLowerCase();
