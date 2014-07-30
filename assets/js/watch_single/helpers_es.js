@@ -137,6 +137,8 @@
                         function( response ){ // Executes after data is returned from ES.
                             // Format the returned ElasticSearch data for Rickshaw compatibility
                             var tempStore = new Array();
+                            console.log("response");
+                            console.log(response);
                             $.each( response.cube, function( key, value ) {
                                 // Put the data we have in an array for plotting {date, count}
                                 var d = response.edges[0]['domain'].partitions[key].value.getTime() / 1000;

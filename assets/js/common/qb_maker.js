@@ -223,8 +223,9 @@
                 var customParams = '';
                 var clause = getCustomClause(params, 'j_top');
                 customParams += '{"'+clause+'":[';
+                console.log(clause);
 
-                var hasNegatives = [];
+                var hasNegatives = [];  
                 var openedBrackets = 1;
  
                 $.each(Object.keys(params).sort(), function(n, key) {
@@ -665,10 +666,10 @@
             }
             var clauseValue = '';
             
-            if ( identifier.length == 0 ) {
+            if ( params[identifier].length == 0 ) {
                 clauseValue = 'and';
             } else {
-                if ( identifier.toLowerCase() != 'or' ){ // Watch out for "and_g"
+                if ( params[identifier].toLowerCase() != 'or' ){ // Watch out for "and_g"
                     clauseValue = 'and';
                 } else {
                     clauseValue = 'or';
